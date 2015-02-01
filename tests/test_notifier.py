@@ -4,6 +4,27 @@ import unittest
 from airbrake.notifier import Airbrake
 
 
+class TestErrbit(unittest.TestCase):
+    def test_one_of_project_id_and_api_url_required(self):
+        with self.assertRaises(TypeError):
+            Airbrake(api_key=2, environment='test')
+
+    def test_api_key_required(self):
+        with self.assertRaises(TypeError):
+            Airbrake(project_id=1, environment='test')
+
+    def test_airbrake_io_api_url(self):
+        ab = Airbrake(project_id=1, api_key=2, environment='test')
+        self.assertEqual(
+            'https://airbrake.io/api/v3/projects/1/notices',
+            ab.api_url
+        )
+
+    def test_custom_api_url(self):
+        ab = Airbrake(api_url='https://example.com', api_key=2, environment='test')
+        self.assertEqual('https://example.com', ab.api_url)
+
+
 class TestAirbrakeNotifier(unittest.TestCase):
 
     def _create_notify(test, exception, session={}, environment={}):

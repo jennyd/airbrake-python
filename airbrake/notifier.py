@@ -40,9 +40,11 @@ class Airbrake(object):
         http://help.airbrake.io/kb/api-2/notifier-api-v3
     """
 
-    def __init__(self, project_id=None, api_key=None, environment=None):
+    def __init__(self, project_id=None, api_key=None, environment=None,
+                 api_url=None):
 
         # properties
+        self.project_id = None
         self._api_url = None
         self._context = None
         self.deploy_url = "http://api.airbrake.io/deploys.txt"
@@ -55,17 +57,23 @@ class Airbrake(object):
             project_id = os.getenv('AIRBRAKE_PROJECT_ID', '')
         if not api_key:
             api_key = os.getenv('AIRBRAKE_API_KEY', '')
+        if not api_url:
+            api_url = os.getenv('AIRBRAKE_API_URL', '')
 
         self.environment = str(environment)
-        self.project_id = str(project_id)
         self.api_key = str(api_key)
+        if project_id:
+            self.project_id = str(project_id)
+        if api_url:
+            self._api_url = str(api_url)
 
-        if not all((self.project_id, self.api_key)):
-            raise TypeError("Airbrake API Key (api_key) and Project ID "
-                            "(project_id) must be set. These values "
-                            "may be set using the environment variables "
-                            "AIRBRAKE_API_KEY and AIRBRAKE_PROJECT_ID or "
-                            "by passing in the arguments explicitly.")
+        if not (self.api_key and any((self.project_id, self._api_url))):
+            raise TypeError("Airbrake API Key (api_key) and either Project ID "
+                            "(project_id) or API URL (api_url) must be set. "
+                            "These values may be set using the environment "
+                            "variables AIRBRAKE_API_KEY, AIRBRAKE_PROJECT_ID "
+                            "and AIRBRAKE_API_URL or by passing in the "
+                            "arguments explicitly.")
 
         self._exc_queue = utils.CheckableQueue()
 
