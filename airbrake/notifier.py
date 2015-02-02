@@ -45,7 +45,7 @@ class Airbrake(object):
 
         # properties
         self.project_id = None
-        self._api_url = None
+        self.api_url = None
         self._context = None
         self.deploy_url = "http://api.airbrake.io/deploys.txt"
         self.notifier = airbrake_python_notifier
@@ -65,15 +65,18 @@ class Airbrake(object):
         if project_id:
             self.project_id = str(project_id)
         if api_url:
-            self._api_url = str(api_url)
+            self.api_url = str(api_url)
 
-        if not (self.api_key and any((self.project_id, self._api_url))):
+        if not (self.api_key and any((self.project_id, self.api_url))):
             raise TypeError("Airbrake API Key (api_key) and either Project ID "
                             "(project_id) or API URL (api_url) must be set. "
                             "These values may be set using the environment "
                             "variables AIRBRAKE_API_KEY, AIRBRAKE_PROJECT_ID "
                             "and AIRBRAKE_API_URL or by passing in the "
                             "arguments explicitly.")
+
+        if not self.api_url:
+            self._set_default_api_url()
 
         self._exc_queue = utils.CheckableQueue()
 
@@ -101,13 +104,10 @@ class Airbrake(object):
             #       version, url, rootDirectory
         return self._context
 
-    @property
-    def api_url(self):
-        """Create the airbrake api endpoint and return a string."""
-        if not self._api_url:
-            self._api_url = ("https://airbrake.io/api/v3/projects/%s/notices"
-                             % self.project_id)
-        return self._api_url
+    def _set_default_api_url(self):
+        """Set api_url to the airbrake.io api endpoint."""
+        self.api_url = ("https://airbrake.io/api/v3/projects/%s/notices"
+                         % self.project_id)
 
     def log(self, exc_info=None, message=None, filename=None,
             line=None, function=None, errtype=None, **params):
